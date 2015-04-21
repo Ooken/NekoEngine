@@ -33,6 +33,8 @@
 #include <vector>
 //for sorting the list of objects
 #include <algorithm>
+//for the setprecision output
+#include <iomanip>
 
 //some of my standart definitions
 #ifndef NULL
@@ -127,7 +129,7 @@ struct Node
   Node* parent;
   Node(){ A=NULL; B=NULL; O=NULL; parent = NULL;}
 };
-#include <bitset>
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,8 +185,13 @@ void generateHierarchy( t_objects &list,Node* Tree, Node* Leafs)
 #pragma omp parallel for schedule(dynamic, 32)
   for(int idx = 0; idx < internal_num;++idx)
   {
+#pragma omp critical(printout)
+    if(idx%32 ==0)
+      std::cout << "\rAT " << idx << "/" << internal_num << "  " << std::setprecision(4) << dot(idx)/dot(internal_num)*100.f << "%  " << std::flush;
     generateNode( list, Tree, Leafs, idx);
   }
+      std::cout << "\rAT " << internal_num << "/" << internal_num << "  " << std::setprecision(4) << 100.f << "%  " << std::flush;
+  std::cout << std::endl;
 }
 void generateNode( t_objects &list,Node* Tree, Node* Leafs, int idx)
 {
