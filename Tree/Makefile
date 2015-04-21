@@ -30,7 +30,6 @@ LIBPATH = -L"/usr/local/cuda-7.0/lib64"
 LIBLST = -lcuda -lcudart -lSDL2 -lGL
 
 $(OUT): $(OBJ_CPP) NVCCLINK
-	@echo Makefile by Neko <nekoyuke@gmail.com>
 	@echo $(ccgreen)link all objects:$(ccend)
 	@echo $(ccgreen)"$(OBJ_ALL)"$(ccend)| sed -e 's/ /\x1b[0m\n\x1b[40;32m/g'
 	@$(GCC) -o $(OUT) $(OBJ_CUDA_L) $(OBJ_ALL) $(LIBPATH) $(LIBLST)
@@ -42,6 +41,7 @@ ifeq "$(OBJ_CUDA_L)" ""
 endif
 	@rm -rf $(OBJ_CUDA_L)
 	@echo $(ccgreen)Object $(OUT) successfully compiled$(ccend)
+	@echo "Makefile by Neko <nekoyuke@gmail.com>"
 
 NVCCLINK: $(OBJ_CU)
 ifeq "$(OBJ_CU)" ""
