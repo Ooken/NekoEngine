@@ -200,6 +200,7 @@ struct Node
 int main(int argc, char **argv)
 {
   std::cout << "TreeConstructor v0.02" << std::endl;
+  double ompclock = omp_get_wtime();
   srand(time(NULL));
   t_objects objectlist;
   Node* Tree = NULL;
@@ -208,23 +209,26 @@ int main(int argc, char **argv)
   //TODO add an function to partition these cube sections and use a 2 level BVH?
   //[first one for unit cubes and second ones inside these cubes when got hit?]
   //or better scale every object with the scenes size?
-  std::cout << "creating object list" << std::endl;
+  std::cout << "creating object list ";ompclock = omp_get_wtime();
   for(int i = (argc >= 2? atoi(argv[1]):STD_NUM_OBJ); i >= 0; --i)
   {
     objectlist.push_back(Object(Vect(dot(rand())/dot(RAND_MAX),dot(rand())/dot(RAND_MAX),dot(rand())/dot(RAND_MAX))));
   }
-  
-  std::cout << "sorting object list" << std::endl;
+  std::cout << "took: " << std::setprecision(3) << dot(omp_get_wtime()-ompclock) << "s" << std::endl;
+  std::cout << "sorting object list ";ompclock = omp_get_wtime();
   std::sort(objectlist.begin(),objectlist.end(),ObjEval());
+  std::cout << "took: " << std::setprecision(3) << dot(omp_get_wtime()-ompclock) << "s" << std::endl;
   
   //SORT BEFORE ALLOC!!! (because objects are being set here already)
-  std::cout << "allocate memory for tree and leafs" << std::endl;
+  std::cout << "allocate memory for tree and leafs ";ompclock = omp_get_wtime();
   allocateHierarchy(&Tree,&Leafs,objectlist);
+  std::cout << "took: " << std::setprecision(3) << dot(omp_get_wtime()-ompclock) << "s" << std::endl;
   
-  std::cout << "generate the Hierarchy" << std::endl;
+  std::cout << "generate the Hierarchy " << std::endl;ompclock = omp_get_wtime();
   //can be repeatet as often as needed, because it will always use the same memory
   //if the object-count is the same... recursive tree generation has to new/delete every time
   generateHierarchy(objectlist,Tree,Leafs);
+  std::cout << "took: " << std::setprecision(3) << dot(omp_get_wtime()-ompclock) << "s" << std::endl;
   
   //TODO Bounding box?
   
@@ -232,8 +236,9 @@ int main(int argc, char **argv)
    *Do your searching stuff in here ;p
    */
   
-  std::cout << "free the hierarchie memory" << std::endl;
+  std::cout << "free the hierarchie memory ";ompclock = omp_get_wtime();
   destructHierarchy(Tree,Leafs);
+  std::cout << "took: " << std::setprecision(3) << dot(omp_get_wtime()-ompclock) << "s" << std::endl;
   
   return NULL;
 }
