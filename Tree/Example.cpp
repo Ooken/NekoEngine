@@ -240,6 +240,10 @@ int main(int argc, char **argv)
   destructHierarchy(Tree,Leafs);
   std::cout << "took: " << std::setprecision(3) << dot(omp_get_wtime()-ompclock) << "s" << std::endl;
   
+  std::cout << "free the list memory ";ompclock = omp_get_wtime();
+  objectlist.clear();
+  std::vector<Object>().swap(objectlist);
+  std::cout << "took: " << std::setprecision(3) << dot(omp_get_wtime()-ompclock) << "s" << std::endl;
   return NULL;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -251,12 +255,12 @@ void generateHierarchy( t_objects &list,Node* Tree, Node* Leafs)
 {
   int internal_num = list.size()-1;
   static int threadnum = omp_get_max_threads();
-  static int threadsize = threadnum*128;
+  static int threadsize = 1024*1024;
   std::cout << "building tree with " << threadsize << " blocksize and " << threadnum << " threads" << std::endl;
-#pragma omp parallel for num_threads(threadnum) schedule(dynamic, threadsize)
+// #pragma omp parallel for num_threads(threadnum) schedule(dynamic, threadsize)
   for(int idx = 0; idx < internal_num;++idx)
   {
-#pragma omp critical(printout)
+// #pragma omp critical(printout)
     if(idx%threadsize ==0)
       std::cout << "\rAT " << idx << "/" << internal_num << "  " << std::setprecision(4) << dot(idx)/dot(internal_num)*100.f << "%  " << std::flush;
     generateNode( list, Tree, Leafs, idx);
