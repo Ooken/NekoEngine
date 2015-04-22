@@ -21,7 +21,7 @@ OBJ_CUDA_L := cudatemp.o
 endif
 
 NVCC := nvcc -O3
-GCC := g++ -O3 -fopenmp
+GCC := g++ -fopenmp -g
 NVARCH := -arch=sm_30
 NVCCFLAG := -std=c++11
 OUT := TreeConstructor
