@@ -35,6 +35,8 @@
 #include <algorithm>
 //for the setprecision output
 #include <iomanip>
+//for getting the thread count
+#include <omp.h>
 
 //some of my standart definitions
 #ifndef NULL
@@ -42,8 +44,8 @@
 #endif
 typedef float dot;
 
-//constant number for standart object count if not given per argument:
-const unsigned int STD_NUM_OBJ = 1024;
+//constant number for standart object count if not given per argument: 100 mio objects (takes 8,2 GB RAM !!!!!!!!!!)
+const unsigned int STD_NUM_OBJ = 100000000;
 
 //forward declaration of structs (node will link to object and vice versa...)
 struct int2;
@@ -59,10 +61,65 @@ typedef std::vector<Object> t_objects;
 unsigned int expandBits(unsigned int v);
   //from http://devblogs.nvidia.com/parallelforall/thinking-parallel-part-iii-tree-construction-gpu/
 unsigned int morton3D(dot x, dot y, dot z);
+
+
   //claims to be done in within 13 instructions, source at:
   // http://embeddedgurus.com/state-space/2014/09/fast-deterministic-and-portable-counting-leading-zeros/
-  // CUDA has __clz but on CPU we have to do it ourself
-static uint32_t CLZ1(uint32_t x);
+  // CUDA has __clz but on CPU we have to do it ourself [no forward decl because of inline (tested it... this way it's faster)]
+static inline uint32_t CLZ1(uint32_t x) {
+    static uint8_t const clz_lkup[] = {
+        32U, 31U, 30U, 30U, 29U, 29U, 29U, 29U,
+        28U, 28U, 28U, 28U, 28U, 28U, 28U, 28U,
+        27U, 27U, 27U, 27U, 27U, 27U, 27U, 27U,
+        27U, 27U, 27U, 27U, 27U, 27U, 27U, 27U,
+        26U, 26U, 26U, 26U, 26U, 26U, 26U, 26U,
+        26U, 26U, 26U, 26U, 26U, 26U, 26U, 26U,
+        26U, 26U, 26U, 26U, 26U, 26U, 26U, 26U,
+        26U, 26U, 26U, 26U, 26U, 26U, 26U, 26U,
+        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U
+    };
+    uint32_t n;
+    if (x >= (1U << 16)) {
+        if (x >= (1U << 24)) {
+            n = 24U;
+        }
+        else {
+            n = 16U;
+        }
+    }
+    else {
+        if (x >= (1U << 8)) {
+            n = 8U;
+        }
+        else {
+            n = 0U;
+        }
+    }
+    return (uint32_t)clz_lkup[x >> n] - n;
+}
 
 
 
@@ -82,8 +139,6 @@ void generateHierarchy( t_objects &list,Node* Tree, Node* Leafs);
 //this one could be the kernel:
 void generateNode( t_objects &list,Node* Tree, Node* Leafs, int idx);
 
-  //for the sort function to work with objects
-bool ObjEval (Object const &i,Object const &j);
 //CUDA's int2 not defined on CPU
 struct int2
 {
@@ -110,6 +165,14 @@ struct Object
   Node* parent;
   Object(Vect t_pos = Vect()){pos = t_pos; mcode = morton3D(pos.x,pos.y,pos.z); parent = NULL;}
 };
+
+//Functor for sorting (faster than with function pointer)
+struct ObjEval{
+  bool operator()(const Object &i,const Object &j) const {
+    return (i.mcode<j.mcode);
+  }
+};
+
 //A Node structure
 struct Node
 {
@@ -148,11 +211,11 @@ int main(int argc, char **argv)
   std::cout << "creating object list" << std::endl;
   for(int i = (argc >= 2? atoi(argv[1]):STD_NUM_OBJ); i >= 0; --i)
   {
-    objectlist.push_back(Object(Vect()));
+    objectlist.push_back(Object(Vect(dot(rand())/dot(RAND_MAX),dot(rand())/dot(RAND_MAX),dot(rand())/dot(RAND_MAX))));
   }
   
   std::cout << "sorting object list" << std::endl;
-  std::sort(objectlist.begin(),objectlist.end(),ObjEval);
+  std::sort(objectlist.begin(),objectlist.end(),ObjEval());
   
   //SORT BEFORE ALLOC!!! (because objects are being set here already)
   std::cout << "allocate memory for tree and leafs" << std::endl;
@@ -182,17 +245,21 @@ int main(int argc, char **argv)
 void generateHierarchy( t_objects &list,Node* Tree, Node* Leafs)
 {
   int internal_num = list.size()-1;
-#pragma omp parallel for schedule(dynamic, 32)
+  static int threadnum = omp_get_max_threads();
+  static int threadsize = threadnum*128;
+  std::cout << "building tree with " << threadsize << " blocksize and " << threadnum << " threads" << std::endl;
+#pragma omp parallel for num_threads(threadnum) schedule(dynamic, threadsize)
   for(int idx = 0; idx < internal_num;++idx)
   {
 #pragma omp critical(printout)
-    if(idx%32 ==0)
+    if(idx%threadsize ==0)
       std::cout << "\rAT " << idx << "/" << internal_num << "  " << std::setprecision(4) << dot(idx)/dot(internal_num)*100.f << "%  " << std::flush;
     generateNode( list, Tree, Leafs, idx);
   }
       std::cout << "\rAT " << internal_num << "/" << internal_num << "  " << std::setprecision(4) << 100.f << "%  " << std::flush;
   std::cout << std::endl;
 }
+
 void generateNode( t_objects &list,Node* Tree, Node* Leafs, int idx)
 {
   //from where to where will this node go?
@@ -303,9 +370,11 @@ int findSplit( t_objects &list, int first, int last)
 }
 int2 determineRange(t_objects &list, int index)
 {
+  //list Size minus One
+  int lso = list.size()-1;
   if(index == 0)
   {//it is the first node, so we are going to cover the entire range
-    return int2( 0, list.size()-1);
+    return int2( 0, lso);
   }
   
   //What will be returned...
@@ -314,9 +383,9 @@ int2 determineRange(t_objects &list, int index)
   int dir;
   //depth of the differing bit to seek for, or higher
   int dep;
-  unsigned int minone = list.at(index-1).mcode;
-  unsigned int precis = list.at(index).mcode;
-  unsigned int pluone = list.at(index+1).mcode;
+  unsigned int minone = list[index-1].mcode;
+  unsigned int precis = list[index].mcode;
+  unsigned int pluone = list[index+1].mcode;
   if((minone == precis && pluone == precis))
   {
     //set the mode to go towards the right, when the left and the right
@@ -354,16 +423,16 @@ int2 determineRange(t_objects &list, int index)
     //Now go through the list and look if there is a higher jump than the ones
     //on the other end of our range
     //TODO Binary search??????????
-    while(index > 0 && index < list.size()-1)
+    while(index > 0 && index < lso)
     {
-      int newdep = CLZ1(list.at(index).mcode ^ list.at(index+dir).mcode);
+      int newdep = CLZ1(list[index].mcode ^ list[index+dir].mcode);
        if(newdep < dep)
        {//the tested gap is higher then the old one
 	 break;
        }
        //move one step into our direction
        index += dir;
-       if(index <= 0 || (index >= list.size()-1))
+       if(index <= 0 || index >= lso)
        {//we hit the left end of our list (index <= 0) or the right end (index >= list.size()-1)
 	 break;
        }
@@ -376,12 +445,6 @@ int2 determineRange(t_objects &list, int index)
     //now give our value
     return ret;
 }//determineRange
-
-//object soring by:
-bool ObjEval (Object const &i,Object const &j)
-{
-  return (i.mcode<j.mcode);
-}
 
 //Morton related functions:
 unsigned int expandBits(unsigned int v)
@@ -403,57 +466,3 @@ unsigned int morton3D(dot x, dot y, dot z)
     return xx * 4 + yy * 2 + zz;
 }
 //Other stuff:
-static inline uint32_t CLZ1(uint32_t x) {
-    static uint8_t const clz_lkup[] = {
-        32U, 31U, 30U, 30U, 29U, 29U, 29U, 29U,
-        28U, 28U, 28U, 28U, 28U, 28U, 28U, 28U,
-        27U, 27U, 27U, 27U, 27U, 27U, 27U, 27U,
-        27U, 27U, 27U, 27U, 27U, 27U, 27U, 27U,
-        26U, 26U, 26U, 26U, 26U, 26U, 26U, 26U,
-        26U, 26U, 26U, 26U, 26U, 26U, 26U, 26U,
-        26U, 26U, 26U, 26U, 26U, 26U, 26U, 26U,
-        26U, 26U, 26U, 26U, 26U, 26U, 26U, 26U,
-        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
-        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
-        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
-        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
-        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
-        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
-        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
-        25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
-        24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U
-    };
-    uint32_t n;
-    if (x >= (1U << 16)) {
-        if (x >= (1U << 24)) {
-            n = 24U;
-        }
-        else {
-            n = 16U;
-        }
-    }
-    else {
-        if (x >= (1U << 8)) {
-            n = 8U;
-        }
-        else {
-            n = 0U;
-        }
-    }
-    return (uint32_t)clz_lkup[x >> n] - n;
-}
