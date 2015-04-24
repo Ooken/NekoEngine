@@ -20,14 +20,18 @@ else
 OBJ_CUDA_L := cudatemp.o
 endif
 
-NVCC := nvcc -O3
-GCC := g++ -O3 -fopenmp
+INC := -I/usr/local/cuda-7.0/targets/x86_64-linux/include/ -I/usr/local/cuda-7.0/samples/common/inc/
+NVCC := nvcc
+GCC := g++
+GCCFLAG :=  -O3 -fopenmp
 NVARCH := -arch=sm_30
-NVCCFLAG := -std=c++11
-OUT := EXECUTABLE
+NVCCFLAG := -std=c++11 -ccbin=g++ -O3
+OUT := NAME
 LIBPATH = -L"/usr/local/cuda-7.0/lib64"
 
 LIBLST = -lcuda -lcudart -lSDL2 -lGL
+
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
 
 $(OUT): $(OBJ_CPP) NVCCLINK
 	@echo $(ccgreen)link all objects:$(ccend)
@@ -42,6 +46,7 @@ endif
 	@rm -rf $(OBJ_CUDA_L)
 	@echo $(ccgreen)Object $(OUT) successfully compiled$(ccend)
 	@echo "Makefile by Neko <nekoyuke@gmail.com>"
+	@echo $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
 NVCCLINK: $(OBJ_CU)
 ifeq "$(OBJ_CU)" ""
@@ -50,16 +55,16 @@ else
 	@echo $(ccgreen)CUDA-link objects:$(ccend)
 	@echo $(ccgreen)"$(OBJ_CU)"$(ccend)| sed -e 's/ /\x1b[0m\n\x1b[40;32m/g'
 	@echo $(ccend)
-	@$(NVCC) $(NVARCH) $(NVCCLINKFLG) -dlink -o $(OBJ_CUDA_L) $(OBJ_CU) $(LIBPATH) $(LIBLST)
+	@$(NVCC) $(NVCCFLAG) $(NVARCH) -dlink -o $(OBJ_CUDA_L) $(OBJ_CU) $(LIBPATH) $(LIBLST)
 endif
 
 %.o: %.cu
 	@echo $(ccyellow)CUDA $(NVCC) compile:$<$(ccend)
-	@$(NVCC) $(NVARCH) -c -o $@ $<
+	@$(NVCC) $(NVCCFLAG) $(NVARCH) $(INC) -c -o $@ $<
 
 %.o: %.cpp
 	@echo $(ccyellow)std $(GCC) compile:$<$(ccend)
-	@$(GCC) -w -std=c++11 -c -o $@ $<
+	@$(GCC) $(GCCFLAG) $(INC) -std=c++11 -c -o $@ $<
 
 .PHONY: clean
 clean:

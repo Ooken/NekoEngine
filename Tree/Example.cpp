@@ -199,7 +199,8 @@ struct Node
 //I'm sorry for doing it in one file but I try to hold this example as easy as possible
 int main(int argc, char **argv)
 {
-  std::cout << "TreeConstructor v0.02" << std::endl;
+  double ompclockALL = omp_get_wtime();
+  std::cout << "TreeConstructor v1.00" << std::endl;
   double ompclock = omp_get_wtime();
   srand(time(NULL));
   t_objects objectlist;
@@ -244,6 +245,7 @@ int main(int argc, char **argv)
   objectlist.clear();
   std::vector<Object>().swap(objectlist);
   std::cout << "took: " << std::setprecision(3) << dot(omp_get_wtime()-ompclock) << "s" << std::endl;
+  std::cout << "EVERYTHING took: " << std::setprecision(3) << dot(omp_get_wtime()-ompclockALL) << "s" << std::endl;
   return NULL;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -324,8 +326,10 @@ void allocateHierarchy(Node** Internals, Node** Leafs, t_objects &list)
 //order is not important but it's always better to stick to a fixed order ^^ better for human-error avoiding and stuff
 void destructHierarchy(Node* Internals, Node* Leafs)
 {
-  delete[] Leafs;
-  delete[] Internals;
+  if(Leafs != NULL)
+    delete[] Leafs;
+  if(Internals!=NULL)
+    delete[] Internals;
   Leafs = NULL;
   Internals = NULL;
 }
@@ -379,19 +383,17 @@ int findSplit( t_objects &list, int first, int last)
 }
 int2 determineRange(t_objects &list, int index)
 {
-  //list Size minus One
+  //so we don't have to call it every time
   int lso = list.size()-1;
+  //tadaah, it's the root node
   if(index == 0)
-  {//it is the first node, so we are going to cover the entire range
     return int2( 0, lso);
-  }
-  
-  //What will be returned...
-  int2 ret;
-  //direction, either to the right(-1) or the left
+  //direction to walk to, 1 to the right, -1 to the left
   int dir;
-  //depth of the differing bit to seek for, or higher
-  int dep;
+  //morton code diff on the outer known side of our range ... diff mc3 diff mc4 ->DIFF<- [mc5 diff mc6 diff ... ] diff .. 
+  int d_min;
+  int initialindex = index;
+  
   unsigned int minone = list[index-1].mcode;
   unsigned int precis = list[index].mcode;
   unsigned int pluone = list[index+1].mcode;
@@ -404,56 +406,61 @@ int2 determineRange(t_objects &list, int index)
     //containing Leaf object X and nodes from X+1 (the split func will make this split there)
     //till the end of the groups
     //(if any bit differs... DEP=32) it will stop the search
-    dir = 1;
-    dep = 32;
-    ret.x = index;
-    }else{
-      //the left and right morton difference depth
-      //010111
-      //011010
-      //011011
-      //up=left so the result would be:
-      //lr.x->3
-      //lr.y->6
-      int2 lr= int2(CLZ1(precis ^ minone),CLZ1(precis ^ pluone));
-      //now check wich one is higher (codes put side by side and wrote from up to down)
-      if(lr.x > lr.y)
-      {//to the left, set the search-depth to the right depth and the ranges end to index
-	dir = -1;
-	dep = lr.y;
-	ret.y = index;
-      }else{//to the right, set the search-depth to the left depth and the ranges begin to index
-	dir = 1;
-	dep = lr.x;
-	ret.x=index;
-      }
-    }
-    
-    //Now go through the list and look if there is a higher jump than the ones
-    //on the other end of our range
-    //TODO Binary search??????????
     while(index > 0 && index < lso)
     {
-      int newdep = CLZ1(list[index].mcode ^ list[index+dir].mcode);
-       if(newdep < dep)
-       {//the tested gap is higher then the old one
-	 break;
-       }
        //move one step into our direction
-       index += dir;
-       if(index <= 0 || index >= lso)
-       {//we hit the left end of our list (index <= 0) or the right end (index >= list.size()-1)
+       index += 1;
+       if(index >= lso)
+       //we hit the left end of our list
 	 break;
-       }
+	 
+      if(list[index].mcode != list[index+1].mcode)
+       //there is a diffrence
+	 break;
     }
-    //now see if we found the left or the right end:
-    if(dir==1)//if we went towards the right:
-      ret.y=index;//set the right end
-    else//if we went towards the left:
-      ret.x=index;//set the left end
-    //now give our value
-    return ret;
-}//determineRange
+    //return the end of equal grouped codes
+    return int2(initialindex,index);
+  }else{
+    //Our codes differ, so we seek for the ranges end in the binary search fashion:
+    int2 lr= int2(CLZ1(precis ^ minone),CLZ1(precis ^ pluone));
+    //now check wich one is higher (codes put side by side and wrote from up to down)
+      if(lr.x > lr.y)
+      {//to the left, set the search-depth to the right depth
+	dir = -1;
+	d_min = lr.y;
+      }else{//to the right, set the search-depth to the left depth
+	dir = 1;
+	d_min = lr.x;
+      }
+    }
+    //Now look for an range to search in (power of two)
+    int l_max = 2;
+    //so we don't have to calc it 3x
+    int testindex = index + l_max*dir;
+    while((testindex<=lso&&testindex>=0)?(CLZ1(precis ^ list[testindex].mcode)>d_min):(false))
+    {l_max *= 2;testindex = index + l_max*dir;}
+    int l = 0;
+    //go from l_max/2 ... l_max/4 ... l_max/8 .......... 1 all the way down
+    for(int div = 2 ; l_max / div >= 1 ; div *= 2){
+      //calculate the ofset state
+        int t = l_max/div;
+	//calculate where to test next
+        int newTest = index + (l + t)*dir;
+	//test if in code range
+        if (newTest <= lso && newTest >= 0)
+        {
+            int splitPrefix = CLZ1(precis ^ list.at(newTest).mcode);
+	    //and if the code is higher then our minimum, update the position
+            if (splitPrefix > d_min)
+	    l = l+t;
+        }
+    }
+    //now give back the range (in the right order, [lower|higher])
+    if(dir==1)
+      return int2(index,index + l*dir);
+    else
+      return int2(index + l*dir,index);
+}
 
 //Morton related functions:
 unsigned int expandBits(unsigned int v)
