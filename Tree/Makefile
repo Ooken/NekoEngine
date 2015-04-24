@@ -25,15 +25,14 @@ NVCC := nvcc
 GCC := g++
 GCCFLAG :=  -O3 -fopenmp -w
 NVARCH := -arch=sm_30
-NVCCFLAG := -std=c++11 -ccbin=g++ -O3
-OUT := TC
+NVCCFLAG := -std=c++11 -O3
+OUT := $(notdir $(shell pwd))
 LIBPATH = -L"/usr/local/cuda-7.0/lib64"
 
 LIBLST = -lcuda -lcudart -lSDL2 -lGL -fopenmp
 
-THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
-
 $(OUT): $(OBJ_CPP) NVCCLINK
+	@echo $(FOLDER)
 	@echo $(ccgreen)link all objects:$(ccend)
 	@echo $(ccgreen)"$(OBJ_ALL)"$(ccend)| sed -e 's/ /\x1b[0m\n\x1b[40;32m/g'
 	@$(GCC) -o $(OUT) $(OBJ_CUDA_L) $(OBJ_ALL) $(LIBPATH) $(LIBLST)
@@ -46,7 +45,6 @@ endif
 	@rm -rf $(OBJ_CUDA_L)
 	@echo $(ccgreen)Object $(OUT) successfully compiled$(ccend)
 	@echo "Makefile by Neko <nekoyuke@gmail.com>"
-	@echo $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
 NVCCLINK: $(OBJ_CU)
 ifeq "$(OBJ_CU)" ""

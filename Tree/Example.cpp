@@ -291,7 +291,7 @@ void generateNode( t_objects &list,Node* Tree, Node* Leafs, int idx)
   //The same with the right child, if it hits the last index in the range
   //it will be a child, so if the range is only 2 wide [for example from 3 to 4]
   //both childs will be leafs, and if it goes over 3, then one will be a child
-  if(split+1 == range.x)
+  if(split+1 == range.y)
     ChB = &Leafs[split+1];
   else
     ChB = &Tree[split+1];
