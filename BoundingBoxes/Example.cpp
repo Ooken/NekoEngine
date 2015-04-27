@@ -330,6 +330,7 @@ int main(int argc, char **argv)
   std::vector<Object>().swap(objectlist);
   std::cout << "took: " << std::setprecision(3) << dot(omp_get_wtime()-ompclock) << "s" << std::endl;
   std::cout << "EVERYTHING took: " << std::setprecision(3) << dot(omp_get_wtime()-ompclockALL) << "s" << std::endl;
+  std::getchar();
   return NULL;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -31,6 +31,7 @@ endif
 .PHONY: clean
 clean:
 ifeq ($(OS),Windows_NT)
+	@for %%x in ($(DIRS)) do make --silent -C %%x clean
 else
 	@for ob in $(DIRS) ; do \
 	echo "          " $(ccgreen) clean: $$ob $(ccend);make --silent -C $$ob clean ; \
