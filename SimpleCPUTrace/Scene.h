@@ -4,8 +4,7 @@
 
 #include "Object.h"
 
-
-#include "AAB.h"
+#include "BVH.h"
 
 //DEBUG
 #include <iostream>
@@ -16,7 +15,7 @@ using std::endl;
 struct Scene
 {
   std::list<Object*> objects;
-  TriList tris;
+  BVH tree;
   
   bool load(std::string file)
   {
@@ -24,8 +23,13 @@ struct Scene
       cout << "is scene file" << endl;
     if(file.find(".obj.neko")!=std::string::npos)
     {
-      objects.push_back(new Object(&tris,file));
+      objects.push_back(new Object(&tree.tris,file));
     }
+  }
+  
+  void update()
+  {
+    
   }
   
   ~Scene()

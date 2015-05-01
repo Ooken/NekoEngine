@@ -4,6 +4,8 @@
 #include "math.h"
 #include "decl.h"
 
+
+//for better performance...
 struct Vect
 {
   dot X;
