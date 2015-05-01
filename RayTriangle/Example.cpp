@@ -31,6 +31,8 @@ struct Vect
   Vect Normalize(){return (*this)/len();}
 };
 
+
+
 struct Triangle
 {
   Vect A,B,C;
@@ -112,7 +114,7 @@ int main(int argc, char **argv)
   dot d = IntersectTri(r,tr,&u,&v);
   Vect res(u,v,d);
   Display(res);
-  set the ray to miss the triangle, for testing
+//   set the ray to miss the triangle, for testing
   cout << "----- ----- ----- "<< "----- ----- ----- " << endl;
   r.Dir.Y = 3;
   Display(r.Pos);

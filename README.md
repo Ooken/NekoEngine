@@ -6,6 +6,12 @@ Projects:
 2. BoundingBoxes	-Generate Bounding Boxes around tringles inside a Tree
 3. SDL_Win		-Simple Window Handler for SDL2
 4. RayTriangle		-Test if a Ray hits a Triangle
+5. SimpleCPUTrace	-Simple RayTracer working on the GPU
+			 Still under construction... So far it can:
+				-Load costum triangle list files into objects
+				-Link all created objects to an triangle-list for the renderer
+				-Implemented bounding boxes and box-ray intersection
+				-except the tree part and a window system, all above too
 
 SideProjects:
 1. Timelapse		-Record the screen slower than it will be saved to the Videofile (creates the Timelapse effect). Useful for Working on stuff-Videos
@@ -31,17 +37,3 @@ if you want to compile just one project go there with cd and type "make"
 if you want to compile all of them go to your folder withthe "master-Makefile" and type make there, it will build all projects :3
 
 Greetings, neko
-
-Done:
-parallel BVH_Tree (CPU)
-parallel Bounding Box calculation
-
-Working on:
-
-Todo:
-SDL2-Window/Render manager
-Ray object
-Ray-BoundingBox intersection
-Ray-Sphere intersection
-Ray-Triangle Intersection
-parallel BVH_Tree (CUDA)
