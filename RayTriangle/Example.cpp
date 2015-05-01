@@ -69,10 +69,22 @@ dot IntersectTri(Ray &r, Triangle &Tri, dot *u, dot *v)
   if(dist <= 0)
     return -1;
   
+  
+  //some precalculations (dot producs...)
+  dot bb = b*b;
+  dot cc = c*c;
+  dot bc = b*c;
+  dot wb = w*b;
+  dot wc = w*c;
+  
   //reuse the var for the UV calculation
-  diver = (b*c)*(b*c)-(b*b)*(c*c);
-  *u = ((b*c)*(w*c)-(c*c)*(w*b))/diver;
-  *v = ((b*c)*(w*b)-(b*b)*(w*c))/diver;
+  diver = (bc*bc)-(bb*cc);
+  *u = ((bc*wc)-(cc*wb))/diver;
+  if(*u < 0 || *u > 1)
+    return -1;//is far way to far away
+  *v = ((bc*wb)-(bb*wc))/diver;
+  if(*v < 0 || (*v + *u) > 1)
+    return -1;//and again... to far away...
   //done
   return dist;
 }
@@ -91,14 +103,25 @@ int main(int argc, char **argv)
   Display(tr.A-tr.C);
   Display(tr.B-tr.C);
   Display(tr.normal);
-  cout << "----- ----- -----" << endl;
+  cout << "----- ----- ----- " << endl;
   Display(r.Pos);
   Display(r.Dir);
-  cout << "----- ----- -----" << endl;
+  cout << "----- ----- ----- " << endl;
   dot u=0;
   dot v=0;
   dot d = IntersectTri(r,tr,&u,&v);
   Vect res(u,v,d);
+  Display(res);
+  set the ray to miss the triangle, for testing
+  cout << "----- ----- ----- "<< "----- ----- ----- " << endl;
+  r.Dir.Y = 3;
+  Display(r.Pos);
+  Display(r.Dir);
+  cout << "----- ----- ----- " << endl;
+  u=0;
+  v=0;
+  d = IntersectTri(r,tr,&u,&v);
+  res = Vect(u,v,d);
   Display(res);
   return NULL;
 }

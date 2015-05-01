@@ -1,6 +1,25 @@
 # NekoEngine
 Parallel RayTracer/PathTracer
 
+Projects:
+1. Tree			-Generating a hierarchie tree in a (pseudo)parallel way (function adaptable for CUDA)
+2. BoundingBoxes	-Generate Bounding Boxes around tringles inside a Tree
+3. SDL_Win		-Simple Window Handler for SDL2
+4. RayTriangle		-Test if a Ray hits a Triangle
+
+SideProjects:
+1. Timelapse		-Record the screen slower than it will be saved to the Videofile (creates the Timelapse effect). Useful for Working on stuff-Videos
+
+External Libs:
+1. SDL_Lib		-SDL2 Binary data/libs/includes for Windows
+
+Other Files:
+README.md		-this readme File
+Autocommit		-Autocommit for linux (just execute this file, enter a commit description and all changes will be uploaded)
+Makefile		-General Makefile for building all sub-makefiles
+Makefile_sub		-Preset for creating new Projects
+
+
 You are free to use my Makefile as long as you put a reference back to me :3
 How To;
 Place the Makefile in your dir (it's the master-file)

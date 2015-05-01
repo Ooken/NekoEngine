@@ -23,7 +23,7 @@ all:
 ifeq ($(OS),Windows_NT)
 	@for %%x in ($(DIRS)) do make --silent -C %%x
 else
-	@for ob in $(DIRS) ; do \
+	-@for ob in $(DIRS) ; do \
 	echo "          " $(ccgreen) build: $$ob $(ccend);make --silent -C $$ob ; \
 	done
 endif
@@ -33,7 +33,7 @@ clean:
 ifeq ($(OS),Windows_NT)
 	@for %%x in ($(DIRS)) do make --silent -C %%x clean
 else
-	@for ob in $(DIRS) ; do \
+	-@for ob in $(DIRS) ; do \
 	echo "          " $(ccgreen) clean: $$ob $(ccend);make --silent -C $$ob clean ; \
 	done
 endif
