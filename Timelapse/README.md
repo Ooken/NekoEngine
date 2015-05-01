@@ -2,6 +2,15 @@ TELL ME IF IT COMPLAINS ABOUT MISSING DLLs OR STUFF
 or if you want the code
 (not publishing atm because it looks lore like a mess .-.)
 
+DO NOT LOOK IN THE SOURCE CODE
+
+I warned you...
+it is mostly uncommented and not well written...
+
+I plan to update the video output to write in h264 mp4/mkv files... so they don't grow into eternal size...
+(I already put an eye on ffmpeg n stuff... gonna do it soon because friends requested this little gadet to record timelases without gigabytes of stream video and then throw away most of the images when increasing the video speed...)
+
+
 
 How to use:
 
