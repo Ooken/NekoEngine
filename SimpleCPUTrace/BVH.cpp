@@ -71,6 +71,35 @@ void BVH::prepare()
     Leafs[i].O = (*it);
 }
 
+void BindNode( NODE* n)
+{
+  if(n->O != NULL)
+  {//it's a leaf node
+    //calc box for leaf
+    n->bounds.Increase(n->O->A);
+    n->bounds.Increase(n->O->B);
+    n->bounds.Increase(n->O->C);
+    BindNode(n->P);
+  }else{//it's an internal node
+    
+    //check if I am first
+    bool survived = true;
+    #pragma omp critical(n)
+    if(n->visit==0)
+    {
+      ++n->visit;
+      survived = false;
+    }
+    if(!survived)return;
+    //I am second and will calc my childboxes
+    n->bounds.Increase(n->A->bounds);
+    n->bounds.Increase(n->B->bounds);
+    
+    if(n->P != NULL)//to stop at root node
+      BindNode(n->P);
+  }
+}
+
 void BVH::generate()
 {
   prepare();
@@ -78,7 +107,8 @@ void BVH::generate()
   for(int i = 0; i < malcount-1; ++i)
     generateNode(i);
   
-  //TODO: Generate AABB's
+  for(int i = 0; i < malcount; ++i)
+   BindNode(&Leafs[i]);
   
 }
 

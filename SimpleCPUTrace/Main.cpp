@@ -1,6 +1,8 @@
 #include "Scene.h"
 
 #include <iostream>
+#include <fstream>
+#include <time.h>
 #include <bitset>
 #include <stdio.h>      /* printf, scanf, puts */
 #include <stdlib.h>     /* realloc, free, exit, NULL */
@@ -14,22 +16,28 @@ void spc(int num)
     std::cout << "|";
 }
 
+void ShowBox(AAB &box)
+{
+  std::cout << "[ " << box.lower.X << " | " << box.lower.Y << " | " << box.lower.Z << " ]-[ " << box.higher.Y << " | " << box.higher.Y << " | " << box.higher.Z << " ]" << std::endl;
+}
+
 void ViewTree(NODE *node, int depth=0)
 {
   spc(depth);
   //   if(depth >= 7){std::cout << "DEEP NODE" << std::endl; return;}
   if(node==NULL){std::cout << "CORRUPT NODE" << std::endl; return;}
-  std::cout << (node->O==NULL?"NODE: \n":"OBJ: ");
+  std::cout << (node->O==NULL?"NODE: ":"OBJ: ");
   if(node->O != NULL)
   {
-    std::cout << "- ID: " << (bitset<32>)node->O->morton << std::endl;
+    std::cout << "- ID: " << (bitset<32>)node->O->morton;
+    ShowBox(node->bounds);
   }else{
+    ShowBox(node->bounds);
     ViewTree(node->A,depth+1);
     ViewTree(node->B,depth+1);
     spc(depth);std::cout << "\u02EA-" << std::endl;
   }
 }
-
 
 int main(int argc, char **argv)
 {
@@ -56,7 +64,7 @@ int main(int argc, char **argv)
   cout << "THIRD" << endl;
   scn.update();
   ViewTree(scn.tree.Internals);
-  //   std::getchar();
+  
   cout << "REACHED END" << endl;
   return 0;
 }

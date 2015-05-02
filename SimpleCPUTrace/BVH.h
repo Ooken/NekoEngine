@@ -25,6 +25,7 @@ struct NODE
   NODE* P;
   Tri *O;
   AAB bounds;
+  short visit;
   void reset(){A=NULL;B=NULL;P=NULL;O=NULL;}
 };
 
@@ -54,7 +55,6 @@ struct BVH
   int2 determineRange(int index);
   
   //KERNEL-BOUNDINGBOXES
-  
 };
 
 #endif
