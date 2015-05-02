@@ -17,29 +17,14 @@ struct Scene
   std::list<Object*> objects;
   BVH tree;
   
-  bool load(std::string file)
-  {
-    if(file.find(".scn.neko")!=std::string::npos)
-      cout << "is scene file" << endl;
-    if(file.find(".obj.neko")!=std::string::npos)
-    {
-      objects.push_back(new Object(&tree.tris,file));
-    }
-  }
+  ObjectID loadOBJ(std::string file);
+  bool unloadOBJ(ObjectID id);
   
-  void update()
-  {
-    
-  }
+  void update();
   
-  ~Scene()
-  {
-    while(!objects.empty())
-    {
-      delete objects.back();
-      objects.pop_back();
-    }
-  }
+  Scene();
+  
+  ~Scene();
 };
 
 #endif

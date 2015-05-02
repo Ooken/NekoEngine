@@ -6,6 +6,11 @@
 #ifndef NEKO_DECL_H
 #define NEKO_DECL_H
 
+#ifndef NULL
+#define NULL 0
+#endif
+
+class int2;
 typedef float dot;
 
 template<class T>
@@ -78,5 +83,11 @@ static inline uint32_t CLZ1(uint32_t x) {
 unsigned int expandBits(unsigned int v);
 
 unsigned int morton3D(dot x, dot y, dot z);
+
+struct int2{
+  int X;
+  int Y;
+  int2(int x = 0, int y = 0):X(x),Y(y){}
+};
 
 #endif

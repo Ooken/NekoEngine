@@ -44,8 +44,8 @@
 #endif
 typedef float dot;
 
-//constant number for standart object count if not given per argument: 100 mio objects (takes 8,2 GB RAM !!!!!!!!!!)
-const unsigned int STD_NUM_OBJ = 17;
+//constant number for standart object count if not given per argument: 10 mio objects
+const unsigned int STD_NUM_OBJ = 10000000;
 
 //forward declaration of structs (node will link to object and vice versa...)
 struct int2;
@@ -62,13 +62,63 @@ unsigned int expandBits(unsigned int v);
 //from http://devblogs.nvidia.com/parallelforall/thinking-parallel-part-iii-tree-construction-gpu/
 unsigned int morton3D(dot x, dot y, dot z);
 
-
-
-
-
-
-
-
+//claims to be done in within 13 instructions, source at:
+// http://embeddedgurus.com/state-space/2014/09/fast-deterministic-and-portable-counting-leading-zeros/
+// CUDA has __clz but on CPU we have to do it ourself [no forward decl because of inline (tested it... this way it's faster)]
+static inline uint32_t CLZ1(uint32_t x) {
+  static uint8_t const clz_lkup[] = {
+    32U, 31U, 30U, 30U, 29U, 29U, 29U, 29U,
+    28U, 28U, 28U, 28U, 28U, 28U, 28U, 28U,
+    27U, 27U, 27U, 27U, 27U, 27U, 27U, 27U,
+    27U, 27U, 27U, 27U, 27U, 27U, 27U, 27U,
+    26U, 26U, 26U, 26U, 26U, 26U, 26U, 26U,
+    26U, 26U, 26U, 26U, 26U, 26U, 26U, 26U,
+    26U, 26U, 26U, 26U, 26U, 26U, 26U, 26U,
+    26U, 26U, 26U, 26U, 26U, 26U, 26U, 26U,
+    25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+    25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+    25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+    25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+    25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+    25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+    25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+    25U, 25U, 25U, 25U, 25U, 25U, 25U, 25U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U,
+    24U, 24U, 24U, 24U, 24U, 24U, 24U, 24U
+  };
+  uint32_t n;
+  if (x >= (1U << 16)) {
+    if (x >= (1U << 24)) {
+      n = 24U;
+    }
+    else {
+      n = 16U;
+    }
+  }
+  else {
+    if (x >= (1U << 8)) {
+      n = 8U;
+    }
+    else {
+      n = 0U;
+    }
+  }
+  return (uint32_t)clz_lkup[x >> n] - n;
+}
 //Find highest differing zero within a range of these objects
 //taken from http://devblogs.nvidia.com/parallelforall/thinking-parallel-part-iii-tree-construction-gpu/
 //and modified to work with our vector list
@@ -237,6 +287,11 @@ int main(int argc, char **argv)
     Vect C(A.x+((dot(rand())/dot(RAND_MAX)-0.5)/10.),A.y+((dot(rand())/dot(RAND_MAX)-0.5)/10.),A.z+((dot(rand())/dot(RAND_MAX)-0.5)/10.));
     objectlist.push_back(Object(A,B,C));
   }
+//   objectlist.push_back(Object(Vect(0,0,0),Vect(1,0,0),Vect(0,1,0)));
+//   objectlist.push_back(Object(Vect(1,0,0),Vect(1,1,0),Vect(1,0,0.5)));
+//   objectlist.push_back(Object(Vect(0,0,0),Vect(1,0,0),Vect(0,1,0)));
+//   objectlist.push_back(Object(Vect(0.17,0.3,0.5),Vect(0.5125,0.24,0.5),Vect(0,0,0)));
+//   objectlist.push_back(Object(Vect(0,0,0),Vect(1,0,0),Vect(0,1,0)));
   std::cout << "took: " << std::setprecision(3) << dot(omp_get_wtime()-ompclock) << "s" << std::endl;
   std::cout << "sorting object list ";ompclock = omp_get_wtime();
   double ompclockloop = omp_get_wtime();

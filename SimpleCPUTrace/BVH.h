@@ -6,6 +6,8 @@
 #include "AAB.h"
 #include <list>
 
+#include <iostream>
+using namespace std;
 
 
 //Core management for triangles (pointing to the objects)
@@ -20,8 +22,10 @@ struct NODE
 {
   NODE *A;
   NODE *B;
+  NODE* P;
   Tri *O;
   AAB bounds;
+  void reset(){A=NULL;B=NULL;P=NULL;O=NULL;}
 };
 
 struct BVH
@@ -34,16 +38,22 @@ struct BVH
   NODE *Leafs;
   
   BVH(){malcount = -1; Internals = NULL; Leafs = NULL;}
-  
+  ~BVH(){n_free();}
   void manageMem();
   
-  void n_allocate();
+  void n_alloc();
   void n_free();
   void n_realloc();
   
   void prepare();
   void generate();
   
+  //KERNEL-TREE
+  void generateNode(int idx);
+  int findSplit(int first, int last);
+  int2 determineRange(int index);
+  
+  //KERNEL-BOUNDINGBOXES
   
 };
 

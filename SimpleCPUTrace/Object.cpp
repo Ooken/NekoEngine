@@ -2,6 +2,7 @@
 
 #include <fstream>
 
+ObjectID Object::currid = 0;
 
 inline
 std::string cutspace(std::string in)
@@ -50,60 +51,81 @@ void Object::Clear()
 }
 
 bool Object::load(std::string file)
-  {
-    if(!tris.empty())
-      Clear();
-    
-    std::fstream f;
-    f.open(file,std::ios::in);
-    if(!f)
-      return false;//error opening File
-      while(!f.eof())
+{
+  if(!tris.empty())
+    Clear();
+  
+  std::fstream f;
+  f.open(file,std::ios::in);
+  if(!f)
+    return false;//error opening File
+    while(!f.eof())
+    {
+      std::string line;
+      std::getline(f,line);
+      
+      if(line.empty() || line.find('#') != std::string::npos)
       {
-	std::string line;
-	std::getline(f,line);
-	
-	if(line.empty() || line.find('#') != std::string::npos)
-	{
-	  continue;
-	}
-	Vect A,B,C;
-	if(line.find('(') == std::string::npos)
-	  continue;//invalid line...
-	  line = line.substr(line.find('('));
-	if(line.find(')') == std::string::npos)
-	  continue;//invalid line...
-	  std::string sA = line.substr(1,line.find(')')-1);
-	A = extract(sA);
-	
-	line = line.substr(1);
-	if(line.find('(') == std::string::npos)
-	  continue;//invalid line...
-	  line = line.substr(line.find('('));
-	if(line.find(')') == std::string::npos)
-	  continue;//invalid line...
-	  std::string sB = line.substr(1,line.find(')')-1);
-	B = extract(sB);
-	
-	
-	line = line.substr(1);
-	if(line.find('(') == std::string::npos)
-	  continue;//invalid line...
-	  line = line.substr(line.find('('));
-	if(line.find(')') == std::string::npos)
-	  continue;//invalid line...
-	  std::string sC = line.substr(1,line.find(')')-1);
-	C = extract(sC);
-	
-	tris.push_back(Tri(A,B,C));
-	
+	continue;
       }
+      Vect A,B,C;
+      if(line.find('(') == std::string::npos)
+	continue;//invalid line...
+	line = line.substr(line.find('('));
+      if(line.find(')') == std::string::npos)
+	continue;//invalid line...
+	std::string sA = line.substr(1,line.find(')')-1);
+      A = extract(sA);
       
-      f.close();
+      line = line.substr(1);
+      if(line.find('(') == std::string::npos)
+	continue;//invalid line...
+	line = line.substr(line.find('('));
+      if(line.find(')') == std::string::npos)
+	continue;//invalid line...
+	std::string sB = line.substr(1,line.find(')')-1);
+      B = extract(sB);
       
-      if(!tris.empty())
-	for(std::list<Tri>::iterator it = tris.begin(); it != tris.end(); ++it)
-	{
-	  visualizerLST->Register(&(*it));
-	}
-  }
+      
+      line = line.substr(1);
+      if(line.find('(') == std::string::npos)
+	continue;//invalid line...
+	line = line.substr(line.find('('));
+      if(line.find(')') == std::string::npos)
+	continue;//invalid line...
+	std::string sC = line.substr(1,line.find(')')-1);
+      C = extract(sC);
+      
+      tris.push_back(Tri(A,B,C));
+      
+    }
+    
+    f.close();
+    
+    if(!tris.empty())
+      for(std::list<Tri>::iterator it = tris.begin(); it != tris.end(); ++it)
+      {
+	visualizerLST->Register(&(*it));
+      }
+}
+
+
+Object::Object(TriList* p, std::string file)
+{
+  visualizerLST = p;
+  file.empty()?valid=true:valid=load(file);
+  id = currid++;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
