@@ -55,3 +55,13 @@ Scene::~Scene()
     objects.pop_back();
   }
 }
+
+void Scene::SetSize(unsigned int w, unsigned int h)
+{
+  active_cam.setRes(w,h);
+  result.SetDim(w,h);
+}
+
+
+
+

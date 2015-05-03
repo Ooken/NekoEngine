@@ -5,6 +5,8 @@
 
 #include "decl.h"
 
+#include <string>
+
 
 //almost Vect but slightly diffrent
 struct Color
@@ -40,6 +42,12 @@ struct Image
   {
     n_free();
   }
+  
+  bool Save(std::string file);
+  
+  void PutPixel(unsigned int x, unsigned int y, Color col);
+  
+  void genSample();
 };
 
 #endif

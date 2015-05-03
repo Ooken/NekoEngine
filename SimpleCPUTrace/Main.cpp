@@ -57,6 +57,11 @@ int main(int argc, char **argv)
   scn.update();
   ViewTree(scn.tree.Internals);
   
+  scn.SetSize(1920,1080);
+  scn.result.genSample();
+  
+  scn.result.Save("result.ppm");
+  
   scn.unloadOBJ(id);
   
   cout << "THIRD" << endl;
