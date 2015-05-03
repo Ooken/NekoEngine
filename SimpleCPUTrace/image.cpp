@@ -20,7 +20,7 @@ void Image::SetDim(unsigned int w, unsigned int h)
 
 void Image::n_alloc()
 {
-  data = (NODE*) malloc(sizeof(NODE)*size);
+  data = (Color*) malloc(sizeof(Color)*size);
   for(int i = size - 1; i >= 0;--i)
   {
     data[i].reset();
@@ -37,7 +37,7 @@ void Image::n_free()
 
 void Image::n_realloc()
 {
-  Color* ndata = (NODE*) realloc(data, sizeof(NODE)*size);
+  Color* ndata = (Color*) realloc(data, sizeof(Color)*size);
   if(ndata==NULL)
   {
     //do it by hand if it doesn't like the realloc way .-.
