@@ -43,8 +43,6 @@ int main(int argc, char **argv)
 {
   cout << "SIMPLETRACE" << endl;
   
-  
-  
   Scene scn;
   
   ObjectID id = scn.loadOBJ("sample.obj.neko");

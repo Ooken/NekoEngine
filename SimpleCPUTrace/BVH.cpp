@@ -44,19 +44,22 @@ void BVH::n_realloc()
 {
   malcount = tris.tris.size();
   //   std::cout << "realloc:" << malcount << std::endl;
-  Leafs = (NODE*) realloc(Leafs, sizeof(NODE)*malcount);
-  Internals = (NODE*) realloc(Internals, sizeof(NODE)*(malcount-1));
-  if(Leafs==NULL || Internals == NULL)
+  NODE *nLeafs = (NODE*) realloc(Leafs, sizeof(NODE)*malcount);
+  NODE *nInternals = (NODE*) realloc(Internals, sizeof(NODE)*(malcount-1));
+  if(nLeafs==NULL || nInternals == NULL)
   {
     //do it by hand if it doesn't like the realloc way .-.
     n_free();
     n_alloc();
-  }
-  Leafs[malcount-1].reset();
-  for(int i = malcount - 2; i >= 0;--i)
-  {
-    Leafs[i].reset();
-    Internals[i].reset();
+  }else{
+    Leafs = nLeafs;
+    Internals = nInternals;
+    Leafs[malcount-1].reset();
+    for(int i = malcount - 2; i >= 0;--i)
+    {
+      Leafs[i].reset();
+      Internals[i].reset();
+    }
   }
 }
 
@@ -108,7 +111,7 @@ void BVH::generate()
     generateNode(i);
   
   for(int i = 0; i < malcount; ++i)
-   BindNode(&Leafs[i]);
+    BindNode(&Leafs[i]);
   
 }
 

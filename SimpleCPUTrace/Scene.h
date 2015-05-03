@@ -6,6 +6,8 @@
 
 #include "BVH.h"
 
+#include "Cam.h"
+
 //DEBUG
 #include <iostream>
 using std::cout;
@@ -17,10 +19,14 @@ struct Scene
   std::list<Object*> objects;
   BVH tree;
   
+  Cam active_cam;
+  
   ObjectID loadOBJ(std::string file);
   bool unloadOBJ(ObjectID id);
   
   void update();
+  
+  
   
   Scene();
   
