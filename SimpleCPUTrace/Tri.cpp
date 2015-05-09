@@ -1,5 +1,7 @@
 #include "Tri.h"
 
+#include <iostream>
+
 dot Tri::Intersect(Ray &r, dot *u, dot *v)
 {
   if(normal.X==0&&normal.Y==0&&normal.Z==0)
@@ -13,7 +15,6 @@ dot Tri::Intersect(Ray &r, dot *u, dot *v)
   dot dist = (normal*(A-r.Pos))/diver;
   if(dist <= 0)
     return -1;
-  
   
   //some precalculations (dot producs...)
   dot bb = b*b;

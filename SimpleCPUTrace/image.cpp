@@ -60,25 +60,19 @@ inline int toInt(dot x){ return int(pow(clamp(x),1/2.2)*255+.5); }
 bool Image::Save(std::string file)
 {
   
-  FILE *f = std::fopen(file.c_str(), "w");         // Write image to PPM file. 
-  std::fprintf(f, "P3\n%d %d\n%d\n", dim.X, dim.Y, 255); 
-  for (int i=0; i<size; i++) 
-    std::fprintf(f,"%d %d %d ", toInt(data[i].R), toInt(data[i].G), toInt(data[i].B)); 
-  return true;
+  std::fstream fs;
   
-//   std::fstream f;
-//   
-//   f.open(file.c_str(), std::ios::out | std::ios::trunc);
-//   if(!f)
-//     return false;//cannot open file for whatever reason...
-//     f << "P3\n" << dim.X << " " << dim.Y <<"\n" << 255 << "\n";
-//   //   f << "P3\n " << dim.X << " " << dim.Y << std::endl << 255 << std::endl;
-//   
-//   for(int i = 0; i < size ; ++i)
-//     f << data[i].R << " " << data[i].G << " " << data[i].B << " ";
-//   
-//   f.close();
-//   return true;
+  fs.open(file.c_str(), std::ios::out | std::ios::trunc);
+  if(!fs)
+    return false;//cannot open file for whatever reason...
+    fs << "P3\n" << dim.X << " " << dim.Y <<"\n" << 255 << "\n";
+  //   fs << "P3\n " << dim.X << " " << dim.Y << std::endl << 255 << std::endl;
+  
+  for(int i = 0; i < size ; ++i)
+    fs << toInt(data[i].R) << " " << toInt(data[i].G) << " " << toInt(data[i].B) << " ";
+  
+  fs.close();
+  return true;
 }
 
 void Image::PutPixel(unsigned int x, unsigned int y, Color col)

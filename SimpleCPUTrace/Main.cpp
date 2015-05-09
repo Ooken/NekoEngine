@@ -45,28 +45,38 @@ int main(int argc, char **argv)
   
   Scene scn;
   
+  scn.active_cam.setPos(Vect(10,0.1,0.2));
+  scn.active_cam.lookAt(Vect(-1,0.2,0.1));
+  
   ObjectID id = scn.loadOBJ("sample.obj.neko");
   cout << "FIRST" << endl;
   scn.update();
-  
+  for(auto i = scn.tree.tris.tris.begin(); i != scn.tree.tris.tris.end();++i)
+  {
+    cout << "TRI:" << scn.tree.tris.tris.size() << endl;
+    ShowVectb((*i)->A);
+    ShowVectb((*i)->B);
+    ShowVectb((*i)->C);
+  }
+  getchar();
   ViewTree(scn.tree.Internals);
   
-  scn.loadOBJ("sampleb.obj.neko");
-  
-  cout << "SECOND" << endl;
-  scn.update();
-  ViewTree(scn.tree.Internals);
-  
+  scn.SetSize(256,128);
+  scn.render();
+  scn.Save("result.ppm");
+  scn.SetSize(128,256);
+  scn.render();
+  scn.Save("resultb.ppm");
+  scn.SetSize(256,256);
+  scn.render();
+  scn.Save("resultc.ppm");
+  scn.SetSize(1920/2,1080);
+  scn.render();
+  scn.Save("resultd.ppm");
   scn.SetSize(1920,1080);
-  scn.result.genSample();
+  scn.render();
+  scn.Save("resulte.ppm");
   
-  scn.result.Save("result.ppm");
-  
-  scn.unloadOBJ(id);
-  
-  cout << "THIRD" << endl;
-  scn.update();
-  ViewTree(scn.tree.Internals);
   
   cout << "REACHED END" << endl;
   return 0;

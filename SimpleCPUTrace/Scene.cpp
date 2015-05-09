@@ -1,5 +1,7 @@
 #include "Scene.h"
 
+#include <iomanip>
+
 ObjectID Scene::loadOBJ(std::string file)
 {
   if(file.find(".obj.neko")!=std::string::npos)
@@ -61,6 +63,67 @@ void Scene::SetSize(unsigned int w, unsigned int h)
   active_cam.setRes(w,h);
   result.SetDim(w,h);
 }
+
+bool Scene::Save(std::string file)
+{
+  return result.Save(file);
+}
+
+void Scene::render()
+{
+  int w = result.dim.X;
+  int h = result.dim.Y;
+  
+  RenderInstance rend;
+  
+  rend.SetCam(&active_cam);
+  rend.SetOBJ(&tree);
+  
+  int px = -1;
+  cout << endl;
+  for(int x = 0; x < w; ++x)
+    for(int y = h-1; y >= 0; --y)
+    {//from bottom left upwards, slowly to the right :3
+      result.PutPixel(x,y,rend.getPixel(x,y));
+      if(px != x)
+      {
+	px = x;
+	cout << "\r" << setprecision(4) << dot(x)/dot(w)*100. << "%     ";
+      }
+    }
+  cout << endl;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

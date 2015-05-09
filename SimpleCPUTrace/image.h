@@ -14,7 +14,9 @@ struct Color
   dot R;
   dot G;
   dot B;
-  void reset(){R = 0; G = 0; B = 0;}
+  dot A;
+  void reset(){R = 0; G = 0; B = 0; A=0;}
+  Color(dot r=0,dot g=0,dot b=0,dot a=0):R(r),G(g),B(b),A(a){}
 };
 
 struct Image

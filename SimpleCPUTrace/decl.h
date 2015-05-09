@@ -90,4 +90,8 @@ struct int2{
   int2(int x = 0, int y = 0):X(x),Y(y){}
 };
 
+
+struct Vect;
+void ShowVectb(Vect v);
+
 #endif

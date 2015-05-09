@@ -16,6 +16,7 @@ struct Vect
   
   Vect operator +(Vect const &v){return Vect(X+v.X,Y+v.Y,Z+v.Z);}
   Vect operator -(Vect const &v){return Vect(X-v.X,Y-v.Y,Z-v.Z);}
+  Vect operator -(){return Vect(-X,-Y,-Z);}
   Vect operator /(dot const &v){return Vect(X/v,Y/v,Z/v);}
   Vect operator *(dot const &v){return Vect(X*v,Y*v,Z*v);}
   //Dot Product

@@ -13,8 +13,13 @@ struct Cam
   //we are going to arrange the view-rays to go from one point through a plane
   //the plane has the size of plx*ply and is pld away from pos in dir direction
   Vect right;
-  Vect down;
+  Vect up;
   
+  //Dirstance of image plane from viewpoint (smaller numbers= more zoom)
+  //may be an equivalent to FOV(Field of View)
+  dot sDist;
+  
+  //aspecRatio
   dot aspec;
   
   //screen size
@@ -25,13 +30,13 @@ struct Cam
     setRes(1,1);
   }
   
-  void setRes(int w, int h);
+  void setRes(int w, int h, dot d = 0.5);
   
   void setPos(Vect t_pos);
   
   void lookAt(Vect t_at);
   
-  Ray getRay(int x, int y);
+  Ray getRay(dot x, dot y);
   
   
 };

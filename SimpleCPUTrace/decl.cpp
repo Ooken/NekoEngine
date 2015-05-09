@@ -8,7 +8,12 @@ unsigned int expandBits(unsigned int v)
   v = (v * 0x00000005u) & 0x49249249u;
   return v;
 }
-
+#include "Vect.h"
+#include <iostream>
+void ShowVectb(Vect v)
+{
+  std::cout << "[ " << v.X << " | " << v.Y << " | " << v.Z << " ]" << std::endl;
+}
 unsigned int morton3D(dot x, dot y, dot z)
 {
   x = std::min(std::max(x * 1024.0f, 0.0f), 1023.0f);
